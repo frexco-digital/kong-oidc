@@ -1,4 +1,5 @@
 local cjson = require("cjson")
+local jwt = require("resty.jwt")
 
 local M = {}
 
@@ -58,6 +59,7 @@ function M.get_options(config, ngx)
     filters = parseFilters(config.filters),
     logout_path = config.logout_path,
     redirect_after_logout_uri = config.redirect_after_logout_uri,
+    verify_client_token = config.verify_client_token
   }
 end
 
@@ -95,5 +97,33 @@ function M.has_bearer_access_token()
   end
   return false
 end
+
+function Split(s, delimiter)
+  local result = {};
+  for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+      table.insert(result, match);
+  end
+  return result;
+end
+
+function GetScope(header)
+  local splited = Split(header, " ")
+  local token = splited[2]
+  local jwt_object = jwt:load_jwt(token)
+  local scope = jwt_object.get('scope')
+  return scope
+end
+
+function M.is_client_token()
+  local header = ngx.req.get_headers()['Authorization']
+  if header and header:find(" ") then
+    local scope = GetScope(header)
+    if string.lower(scope) == 'client' then
+      return true
+    end
+  end
+  return false
+end
+
 
 return M
