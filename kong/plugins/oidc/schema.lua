@@ -19,6 +19,7 @@ return {
     logout_path = { type = "string", required = false, default = '/logout' },
     redirect_after_logout_uri = { type = "string", required = false, default = '/' },
     filters = { type = "string" },
-    verify_client_token = {type = "boolean", required = true, default = false}
+    verify_client_token = {type = "boolean", default = false},
+    public_key = {type = "string", required = false}
   }
 }

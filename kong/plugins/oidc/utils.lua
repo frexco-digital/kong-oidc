@@ -59,7 +59,8 @@ function M.get_options(config, ngx)
     filters = parseFilters(config.filters),
     logout_path = config.logout_path,
     redirect_after_logout_uri = config.redirect_after_logout_uri,
-    verify_client_token = config.verify_client_token
+    verify_client_token = config.verify_client_token,
+    public_key = config.public_key
   }
 end
 
@@ -109,7 +110,9 @@ end
 function GetScope(header)
   local splited = Split(header, " ")
   local token = splited[2]
+  ngx.log(ngx.DEBUG, token)
   local jwt_object = jwt:load_jwt(token)
+  ngx.log(jwt_object)
   local scope = jwt_object.get('scope')
   return scope
 end
