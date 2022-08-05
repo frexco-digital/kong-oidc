@@ -108,11 +108,9 @@ function Split(s, delimiter)
 end
 
 function GetScope(header)
-  local splited = Split(header, " ")
-  local jwt_object = jwt:load_jwt(splited[2])
-  ngx.log(ngx.WARN, tostring(jwt_object))
-  local scope = jwt_object.get('scope')
-  return scope
+  local params = Split(header, " ")
+  local token = params[2]
+  return 'client'
 end
 
 function M.is_client_token()
