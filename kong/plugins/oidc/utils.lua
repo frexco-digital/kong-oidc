@@ -109,8 +109,7 @@ end
 
 function GetScope(header)
   local splited = Split(header, " ")
-  kong.log('######## TESTE #######')
-  kong.log(splited)
+  ngx.log(ngx.WARN, splited)
   local token = splited[2]
   ngx.log(ngx.WARN, token)
   local jwt_object = jwt:load_jwt(token)
@@ -121,6 +120,7 @@ end
 
 function M.is_client_token()
   local header = ngx.req.get_headers()['Authorization']
+  ngx.log(ngx.WARN, header)
   if header and header:find(" ") then
     local scope = GetScope(header)
     if string.lower(scope) == 'client' then

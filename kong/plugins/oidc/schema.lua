@@ -20,6 +20,6 @@ return {
     redirect_after_logout_uri = { type = "string", required = false, default = '/' },
     filters = { type = "string" },
     verify_client_token = {type = "boolean", default = false},
-    public_key = {type = "string", required = false}
+    client_token_public_key = {type = "string", required = false}
   }
 }
