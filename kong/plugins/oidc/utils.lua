@@ -109,10 +109,11 @@ end
 
 function GetScope(header)
   local splited = Split(header, " ")
+  ngx.log(ngx.WARN, splited)
   local token = splited[2]
-  ngx.log(ngx.DEBUG, token)
+  ngx.log(ngx.WARN, token)
   local jwt_object = jwt:load_jwt(token)
-  ngx.log(jwt_object)
+  ngx.log(ngx.WARN, jwt_object)
   local scope = jwt_object.get('scope')
   return scope
 end
