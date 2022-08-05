@@ -67,8 +67,8 @@ function introspect(oidcConfig)
   if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
     local res, err = require("resty.openidc").introspect(oidcConfig)
     for k,v in pairs(res) do
-      ngx.log(ngx.WARN, k)
-      ngx.log(ngx.WARN, v)
+      ngx.log(ngx.WARN, tostring(k))
+      ngx.log(ngx.WARN, tostring(v))
     end
     if err then
       if oidcConfig.bearer_only == "yes" then
