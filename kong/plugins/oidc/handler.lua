@@ -3,6 +3,7 @@ local OidcHandler = BasePlugin:extend()
 local utils = require("kong.plugins.oidc.utils")
 local filter = require("kong.plugins.oidc.filter")
 local session = require("kong.plugins.oidc.session")
+local py = require("python")
 
 OidcHandler.PRIORITY = 1000
 
@@ -66,7 +67,7 @@ end
 function introspect(oidcConfig)
   if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
     local res, err = require("resty.openidc").introspect(oidcConfig)
-    ngx.log(ngx.WARN, tostring(res))
+    ngx.log(ngx.WARN, py.repr(res))
     if err then
       if oidcConfig.bearer_only == "yes" then
         ngx.header["WWW-Authenticate"] = 'Bearer realm="' .. oidcConfig.realm .. '",error="' .. err .. '"'
