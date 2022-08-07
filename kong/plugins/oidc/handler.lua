@@ -64,7 +64,6 @@ function make_oidc(oidcConfig)
 end
 
 function introspect(oidcConfig)
-  utils.has_bearer_access_token()
   local is_client = utils.is_client_token()
   ngx.log(ngx.WARN, is_client)
   if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
