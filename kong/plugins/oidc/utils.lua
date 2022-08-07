@@ -110,6 +110,8 @@ end
 function GetScope(header)
   local params = Split(header, " ")
   local token = params[2]
+  local jwt_obj = jwt:load_jwt(token)
+  ngx.log(ngx.WAR, "res.access_token.sub=", cjson.encode(jwt_obj))
   return 'client'
 end
 

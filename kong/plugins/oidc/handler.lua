@@ -64,12 +64,10 @@ function make_oidc(oidcConfig)
 end
 
 function introspect(oidcConfig)
+  local is_client = utils.is_client_token()
+  ngx.log(ngx.WARN, is_client)
   if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
     local res, err = require("resty.openidc").introspect(oidcConfig)
-    for k,v in pairs(res) do
-      ngx.log(ngx.WARN, tostring(k))
-      ngx.log(ngx.WARN, tostring(v))
-    end
     if err then
       if oidcConfig.bearer_only == "yes" then
         ngx.header["WWW-Authenticate"] = 'Bearer realm="' .. oidcConfig.realm .. '",error="' .. err .. '"'
