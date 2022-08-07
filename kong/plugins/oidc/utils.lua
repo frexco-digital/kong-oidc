@@ -101,9 +101,9 @@ end
 
 
 function GetScope(header)
-  local divider = header:find(' ')
-  local token = header:sub(divider+1)
-  local jwt_obj = jwt:load_jwt(token)
+  -- local divider = header:find(' ')
+  -- local token = header:sub(divider+1)
+  local jwt_obj = jwt:load_jwt(header)
   ngx.log(ngx.WAR, "res.access_token.sub=", cjson.encode(jwt_obj))
   return 'client'
 end
