@@ -125,7 +125,10 @@ function GetScope(header)
   local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
   local payload = ngx.decode_base64(claims_64)
   local token_payload = cjson.decode(payload)
-  ngx.log(ngx.WARN, tostring(token_payload))
+  for k, v in pairs(token_payload) do
+    ngx.log(ngx.WARN, k)
+    ngx.log(ngx.WARN, v)
+  end
   return 'client'
 end
 
