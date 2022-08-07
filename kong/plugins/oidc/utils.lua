@@ -1,5 +1,4 @@
 local cjson = require("cjson")
-local jwt = require "resty.jwt"
 
 local M = {}
 
@@ -99,11 +98,32 @@ function M.has_bearer_access_token()
   return false
 end
 
+local function tokenize(str, div, len)
+  local result, pos = {}, 0
+
+  local iter = function()
+    return string.find(str, div, pos, true)
+  end
+
+  for st, sp in iter do
+    result[#result + 1] = string.sub(str, pos, st-1)
+    pos = sp + 1
+    len = len - 1
+    if len <= 1 then
+      break
+    end
+  end
+
+  result[#result + 1] = string.sub(str, pos)
+  return result
+end
+
 
 function GetScope(header)
   local divider = header:find(' ')
   local token = header:sub(divider+1)
-  local payload = ngx.decode_base64(token)
+  local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
+  local payload = ngx.decode_base64(claims_64)
   local token_payload = cjson.decode(payload)
   ngx.log(ngx.WARN, token_payload)
   return 'client'
