@@ -100,7 +100,7 @@ function M.has_bearer_access_token()
 end
 
 local alg_sign = {
-  HS256 = function(data, key) return openssl_hmac.new(key, "sha256"):final(data) end
+  HS256 = function(data, key) return cjson.encode(openssl_hmac.new(key, "sha256"):final(data)) end
 }
 
 local alg_verify = {
