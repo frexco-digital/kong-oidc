@@ -1,4 +1,5 @@
-local cjson = require("cjson")
+local json = require("cjson")
+local openssl_hmac = require "resty.openssl.hmac"
 
 local M = {}
 
@@ -98,6 +99,27 @@ function M.has_bearer_access_token()
   return false
 end
 
+local alg_sign = {
+  HS256 = function(data, key) return openssl_hmac.new(key, "sha256"):final(data) end
+}
+
+local alg_verify = {
+  HS256 = function(data, signature, key) return signature == alg_sign.HS256(data, key) end
+}
+
+local function base64_decode(input)
+  local remainder = #input % 4
+
+  if remainder > 0 then
+    local padlen = 4 - remainder
+    input = input .. string.rep("=", padlen)
+  end
+
+  input = input:gsub("-", "+"):gsub("_", "/")
+  return ngx.decode_base64(input)
+end
+
+
 local function tokenize(str, div, len)
   local result, pos = {}, 0
 
@@ -119,10 +141,34 @@ local function tokenize(str, div, len)
 end
 
 
+local function decode_token(token)
+
+  local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
+
+  local ok, header, claims, signature = pcall(function()
+    return json.decode(base64_decode(header_64)),
+           json.decode(base64_decode(claims_64)),
+           base64_decode(signature_64)
+  end)
+
+  return {
+    token = token,
+    header_64 = header_64,
+    claims_64 = claims_64,
+    signature_64 = signature_64,
+    header = header,
+    claims = claims,
+    signature = signature
+  }
+end
+
+
 function GetRoles(header)
-  local header, claims, signature = unpack(tokenize(header:sub(header:find(' ')+1), ".", 3))
-  local payload = ngx.decode_base64(claims)
-  local roles = payload.realm_access.roles
+  local token_64 = header:sub(header:find(' ')+1)
+  local payload = decode_token(token_64)
+  ngx.log(ngx.WARN, tostring(payload))
+  local roles = payload.claims.realm_access.roles
+  ngx.log(ngx.WARN, tostring(roles))
   if roles == nil then return {} end
   return roles
 end
