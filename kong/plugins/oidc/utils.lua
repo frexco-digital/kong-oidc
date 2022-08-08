@@ -1,5 +1,10 @@
 local cjson = require("cjson")
-local openssl_hmac = require "resty.openssl.hmac"
+local openssl = {
+  pkey = require 'openssl.pkey',
+  digest = require 'openssl.digest',
+  x509 = require 'openssl.x509',
+  hmac = require 'openssl.hmac'
+}
 
 local M = {}
 
@@ -111,12 +116,12 @@ local function base64_decode(input)
   return ngx.decode_base64(input)
 end
 
-function M.hs256SignatureIsValid(secret)
-  local hmac = openssl_hmac.new(secret, 'SHA256')
-  local checksum = hmac:final(M.header_64 .. '.' .. M.claims_64)
-  ngx.log(ngx.WARN, M.signature)
-  ngx.log(ngx.WARN, checksum)
-  return checksum == M.signature
+function M.rs256SignatureIsValid(publicKey)
+  local digest = openssl.digest.new('SHA256')
+  digest:update(M.header_64 .. '.' .. M.claims_64)
+  local vkey = openssl.pkey.new(publicKey)
+  local isVerified = vkey:verify(M.signature, digest)
+  return isVerified
 end
 
 
@@ -148,7 +153,7 @@ local function decode_token(token)
   M.ok, M.header, M.claims, M.signature = pcall(function()
     return cjson.decode(base64_decode(M.header_64)),
            cjson.decode(base64_decode(M.claims_64)),
-           ngx.decode_base64(M.signature_64)
+           base64_decode(M.signature_64)
   end)
 end
 

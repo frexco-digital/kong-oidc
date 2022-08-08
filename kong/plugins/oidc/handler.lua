@@ -67,7 +67,8 @@ function introspect(oidcConfig)
 
   -- Service token verification
   if utils.is_ms_token() == true and oidcConfig.verify_ms_token == false then
-    if utils.hs256SignatureIsValid(oidcConfig.client_secret) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
+    if oidcConfig.ms_token_public_key == nil then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Public Key', ngx.HTTP_UNAUTHORIZED) end
+    if utils.rs256SignatureIsValid(oidcConfig.ms_token_public_key) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
     return utils.claims
   end
 
