@@ -114,6 +114,8 @@ end
 function M.hs256SignatureIsValid(secret)
   local hmac = openssl_hmac.new(secret, 'SHA256')
   local checksum = hmac:final(M.header_64 .. '.' .. M.claims_64)
+  ngx.log(ngx.WARN, M.signature)
+  ngx.log(ngx.WARN, checksum)
   return checksum == M.signature
 end
 
