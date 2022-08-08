@@ -1,4 +1,4 @@
-local json = require("cjson")
+local cjson = require("cjson")
 local openssl_hmac = require "resty.openssl.hmac"
 
 local M = {}
@@ -146,8 +146,8 @@ local function decode_token(token)
   local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
 
   local ok, header, claims, signature = pcall(function()
-    return json.decode(base64_decode(header_64)),
-           json.decode(base64_decode(claims_64)),
+    return cjson.decode(base64_decode(header_64)),
+           cjson.decode(base64_decode(claims_64)),
            base64_decode(signature_64)
   end)
 
@@ -166,7 +166,7 @@ end
 function GetRoles(header)
   local token_64 = header:sub(header:find(' ')+1)
   local payload = decode_token(token_64)
-  for k, v in pairs(payload) do
+  for k, v in pairs(payload.claims) do
     ngx.log(ngx.WARN, tostring(k))
     ngx.log(ngx.WARN, tostring(v))
   end
