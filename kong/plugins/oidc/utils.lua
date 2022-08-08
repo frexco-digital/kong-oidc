@@ -59,8 +59,8 @@ function M.get_options(config, ngx)
     filters = parseFilters(config.filters),
     logout_path = config.logout_path,
     redirect_after_logout_uri = config.redirect_after_logout_uri,
-    verify_client_token = config.verify_client_token,
-    client_token_public_key = config.client_token_public_key
+    verify_ms_token = config.verify_ms_token,
+    ms_token_public_key = config.ms_token_public_key
   }
 end
 
@@ -163,13 +163,13 @@ local function decode_token(token)
 end
 
 
-local function is_client_token()
+local function is_ms_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
     local token_64 = header:sub(header:find(' ')+1)
     local payload = decode_token(token_64)
     for k, v in pairs(payload.claims.realm_access.roles) do
-      if string.lower(tostring(v)) == 'client' then
+      if string.lower(tostring(v)) == 'microservice' then
         return true
       end
     end
@@ -177,8 +177,12 @@ local function is_client_token()
   return false
 end
 
+function M:verify_signature(key)
+  return alg_verify['HS256'](self.header_64 .. "." .. self.claims_64, self.signature, key)
+end
+
 function M.needs_to_verify()
-  if is_client_token() then
+  if is_ms_token() then
     return false
   end
   return true
