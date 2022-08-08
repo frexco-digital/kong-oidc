@@ -166,10 +166,14 @@ end
 function GetRoles(header)
   local token_64 = header:sub(header:find(' ')+1)
   local payload = decode_token(token_64)
-  ngx.log(ngx.WARN, tostring(payload))
-  local roles = payload.claims.realm_access.roles
-  ngx.log(ngx.WARN, tostring(roles))
-  if roles == nil then return {} end
+  for k, v in pairs(payload) do
+    ngx.log(ngx.WARN, tostring(k))
+    ngx.log(ngx.WARN, tostring(v))
+  end
+  local roles = nil
+  -- local roles = payload.claims.realm_access.roles
+  -- ngx.log(ngx.WARN, tostring(roles))
+  -- if roles == nil then return {} end
   return roles
 end
 
