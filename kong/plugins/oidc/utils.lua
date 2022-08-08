@@ -104,7 +104,7 @@ local alg_sign = {
 }
 
 local alg_verify = {
-  HS256 = function(data, signature, key) return signature == alg_sign.HS256(data, key) end
+  HS256 = function(data, signature, key) ngx.log(ngx.WARN, alg_sign.HS256(data, key)) return signature == alg_sign.HS256(data, key) end
 }
 
 local function base64_decode(input)
