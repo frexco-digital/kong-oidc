@@ -178,10 +178,7 @@ local function is_ms_token()
 end
 
 function M:verify_signature(key)
-  local header = ngx.req.get_headers()['Authorization']
-  local token_64 = header:sub(header:find(' ')+1)
-  local header_64, claims_64, signature_64 = unpack(tokenize(token_64, ".", 3))
-  return alg_verify['HS256'](header_64 .. "." .. claims_64, signature_64, key)
+  return alg_verify['HS256'](self.header_64 .. "." .. self.claims_64, self.signature, key)
 end
 
 function M.needs_to_verify()
