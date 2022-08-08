@@ -120,19 +120,18 @@ end
 
 
 function GetRoles(header)
-  local divider = header:find(' ')
-  local token = header:sub(divider+1)
-  local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
-  local payload = ngx.decode_base64(claims_64)
-  local scopes = payload['realm_access']['roles']
-  ngx.log(ngx.DEBUG, tostring(scopes))
-  return scopes
+  local header, claims, signature = unpack(tokenize(header:sub(header:find(' ')+1), ".", 3))
+  local payload = ngx.decode_base64(claims)
+  local roles = payload.realm_access.roles
+  if roles == nil then return {} end
+  return roles
 end
 
 function M.is_client_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
     local roles = GetRoles(header)
+    if roles == nil then return false end
     for role in roles do
       if string.lower(role) == 'client' then
         return true
