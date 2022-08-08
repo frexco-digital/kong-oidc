@@ -66,8 +66,9 @@ end
 function introspect(oidcConfig)
 
   -- Service token verification
-  if utils.Is_ms_token() == true and oidcConfig.verify_ms_token == false then
-    if utils.Verify_signature(oidcConfig.client_secret) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
+  ngx.log(ngx.WARN, oidcConfig.client_secret)
+  if utils.is_ms_token() == true and oidcConfig.verify_ms_token == false then
+    if utils.verify_signature(oidcConfig.client_secret) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
     return utils.claims
   end
 
