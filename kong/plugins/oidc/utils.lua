@@ -153,7 +153,7 @@ local function decode_token(token)
 end
 
 
-local function is_ms_token()
+function Is_ms_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
     local token_64 = header:sub(header:find(' ')+1)
@@ -167,7 +167,7 @@ local function is_ms_token()
   return false
 end
 
-local function verify_signature(key)
+function Verify_signature(key)
   return alg_verify['HS256'](M.header_64 .. "." .. M.claims_64, M.signature, key)
 end
 
