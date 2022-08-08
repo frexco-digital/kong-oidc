@@ -1,9 +1,7 @@
-local cjson = require("cjson")
-local openssl = {
-  pkey = require 'resty.openssl.pkey',
-  digest = require 'resty.openssl.digest',
-  hmac = require 'resty.openssl.hmac'
-}
+local cjson = require "cjson"
+local openssl_digest = require "resty.openssl.digest"
+local openssl_hmac = require "resty.openssl.hmac"
+local openssl_pkey = require "resty.openssl.pkey"
 
 local M = {}
 
@@ -103,6 +101,30 @@ function M.has_bearer_access_token()
   return false
 end
 
+local alg_sign = {
+  HS256 = function(data, key) return openssl_hmac.new(key, "sha256"):final(data) end,
+  RS256 = function(data, key)
+    local digest = openssl_digest.new("sha256")
+    assert(digest:update(data))
+    return assert(openssl_pkey.new(key):sign(digest))
+  end
+}
+
+local alg_verify = {
+  HS256 = function(data, signature, key) return signature == alg_sign.HS256(data, key) end,
+  RS256 = function(data, signature, key)
+    local pkey, _ = openssl_pkey.new(key)
+    assert(pkey, "Consumer Public Key is Invalid")
+    local digest = openssl_digest.new("sha256")
+    assert(digest:update(data))
+    return pkey:verify(signature, digest)
+  end
+}
+
+function M.verify_signature(pkey)
+  return alg_verify[M.header.alg](M.header_64 .. "." .. M.claims_64, M.signature, pkey)
+end
+
 local function base64_decode(input)
   local remainder = #input % 4
 
@@ -114,15 +136,6 @@ local function base64_decode(input)
   input = input:gsub("-", "+"):gsub("_", "/")
   return ngx.decode_base64(input)
 end
-
-function M.rs256SignatureIsValid(publicKey)
-  local digest = openssl.digest.new('SHA256')
-  digest:update(M.header_64 .. '.' .. M.claims_64)
-  local vkey = openssl.pkey.new(publicKey)
-  local isVerified = vkey:verify(M.signature, digest)
-  return isVerified
-end
-
 
 local function tokenize(str, div, len)
   local result, pos = {}, 0
