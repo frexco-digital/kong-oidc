@@ -148,7 +148,7 @@ local function decode_token(token)
   M.ok, M.header, M.claims, M.signature = pcall(function()
     return cjson.decode(base64_decode(M.header_64)),
            cjson.decode(base64_decode(M.claims_64)),
-           base64_decode(M.signature_64)
+           ngx.decode_base64(M.signature_64)
   end)
 end
 
