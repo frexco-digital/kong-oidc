@@ -119,25 +119,24 @@ local function tokenize(str, div, len)
 end
 
 
-function GetScope(header)
+function GetRoles(header)
   local divider = header:find(' ')
   local token = header:sub(divider+1)
   local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
   local payload = ngx.decode_base64(claims_64)
   local token_payload = cjson.decode(payload)
-  for k, v in pairs(token_payload) do
-    ngx.log(ngx.WARN, tostring(k))
-    -- ngx.log(ngx.WARN, tostring(v))
-  end
-  return 'client'
+  local scopes = token_payload['realm_access']['roles']
+  return scopes
 end
 
 function M.is_client_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
-    local scope = GetScope(header)
-    if string.lower(scope) == 'client' then
-      return true
+    local roles = GetRoles(header)
+    for role in roles do
+      if string.lower(role) == 'client' then
+        return true
+      end
     end
   end
   return false
