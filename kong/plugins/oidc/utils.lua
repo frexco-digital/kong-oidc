@@ -163,32 +163,25 @@ local function decode_token(token)
 end
 
 
-function GetRoles(header)
-  local token_64 = header:sub(header:find(' ')+1)
-  local payload = decode_token(token_64)
-  for k, v in pairs(payload.claims.realm_access.roles) do
-    ngx.log(ngx.WARN, tostring(k))
-    ngx.log(ngx.WARN, tostring(v))
-  end
-  local roles = nil
-  -- local roles = payload.claims.realm_access.roles
-  -- ngx.log(ngx.WARN, tostring(roles))
-  -- if roles == nil then return {} end
-  return roles
-end
-
-function M.is_client_token()
+local function is_client_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
-    local roles = GetRoles(header)
-    if roles == nil then return false end
-    for role in roles do
-      if string.lower(role) == 'client' then
+    local token_64 = header:sub(header:find(' ')+1)
+    local payload = decode_token(token_64)
+    for k, v in pairs(payload.claims.realm_access.roles) do
+      if string.lower(tostring(v)) == 'client' then
         return true
       end
     end
   end
   return false
+end
+
+function M.needs_to_verify()
+  if is_client_token() then
+    return false
+  end
+  return true
 end
 
 
