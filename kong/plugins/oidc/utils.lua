@@ -145,21 +145,11 @@ local function decode_token(token)
 
   M.header_64, M.claims_64, M.signature_64 = unpack(tokenize(token, ".", 3))
 
-  local ok, header, claims, signature = pcall(function()
+  M.ok, M.header, M.claims, M.signature = pcall(function()
     return cjson.decode(base64_decode(M.header_64)),
            cjson.decode(base64_decode(M.claims_64)),
            base64_decode(M.signature_64)
   end)
-
-  return {
-    token = token,
-    header_64 = M.header_64,
-    claims_64 = M.claims_64,
-    signature_64 = M.signature_64,
-    header = header,
-    claims = claims,
-    signature = signature
-  }
 end
 
 
@@ -167,8 +157,8 @@ local function is_ms_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
     local token_64 = header:sub(header:find(' ')+1)
-    local payload = decode_token(token_64)
-    for k, v in pairs(payload.claims.realm_access.roles) do
+    decode_token(token_64)
+    for k, v in pairs(M.claims.realm_access.roles) do
       if string.lower(tostring(v)) == 'microservice' then
         return true
       end
