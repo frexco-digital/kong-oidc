@@ -19,7 +19,8 @@ return {
     logout_path = { type = "string", required = false, default = '/logout' },
     redirect_after_logout_uri = { type = "string", required = false, default = '/' },
     filters = { type = "string" },
+    verify_client_token = {type = "boolean", default = false},
     verify_ms_token = {type = "boolean", default = false},
-    ms_token_public_key = {type = "string", required = false}
+    token_public_key = {type = "string", required = false}
   }
 }

@@ -66,12 +66,13 @@ end
 function introspect(oidcConfig)
 
   -- Service token verification
-  if utils.is_ms_token() == true and oidcConfig.verify_ms_token == false then
-    if oidcConfig.ms_token_public_key == nil then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Public Key', ngx.HTTP_UNAUTHORIZED) end
-    if utils.verify_signature(oidcConfig.ms_token_public_key) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
+  if (utils.is_ms_token() == true and oidcConfig.verify_ms_token == false) or oidcConfig.verify_client_token == false then
+    if oidcConfig.token_public_key == nil then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Public Key', ngx.HTTP_UNAUTHORIZED) end
+    if utils.verify_signature(oidcConfig.token_public_key) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
     ngx.log(ngx.ALERT, '### SKIPPING REQUEST ###')
     return utils.claims
   end
+
   ngx.log(ngx.ALERT, '### MAKING REQUEST ###')
   if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
     local res, err = require("resty.openidc").introspect(oidcConfig)

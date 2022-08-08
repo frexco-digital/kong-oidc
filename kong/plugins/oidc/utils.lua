@@ -62,7 +62,8 @@ function M.get_options(config, ngx)
     logout_path = config.logout_path,
     redirect_after_logout_uri = config.redirect_after_logout_uri,
     verify_ms_token = config.verify_ms_token,
-    ms_token_public_key = config.ms_token_public_key
+    verify_client_token = config.verify_client_token,
+    token_public_key = config.token_public_key
   }
 end
 
