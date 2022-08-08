@@ -66,9 +66,9 @@ end
 function introspect(oidcConfig)
 
   -- Service token verification
-  ngx.log(ngx.DEBUG, tostring(oidcConfig.verify_client_token))
+  ngx.log(ngx.INFO, tostring(oidcConfig.verify_client_token))
   if utils.needs_to_verify() == false and oidcConfig.verify_client_token == false then
-    ngx.log(ngx.DEBUG, oidcConfig.client_token_public_key)
+    ngx.log(ngx.INFO, oidcConfig.client_token_public_key)
   end
 
   if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
