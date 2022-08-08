@@ -99,14 +99,6 @@ function M.has_bearer_access_token()
   return false
 end
 
-local alg_sign = {
-  HS256 = function(data, key) return openssl_hmac.new(key, "sha256"):final(data) end
-}
-
-local alg_verify = {
-  HS256 = function(data, signature, key) return signature == alg_sign.HS256(data, key) end
-}
-
 local function base64_decode(input)
   local remainder = #input % 4
 
@@ -167,8 +159,8 @@ local function is_ms_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
     local token_64 = header:sub(header:find(' ')+1)
-    local payload = decode_token(token_64)
-    for k, v in pairs(payload.claims.realm_access.roles) do
+    Token = decode_token(token_64)
+    for k, v in pairs(Token.claims.realm_access.roles) do
       if string.lower(tostring(v)) == 'microservice' then
         return true
       end
@@ -177,11 +169,13 @@ local function is_ms_token()
   return false
 end
 
-function M:verify_signature(key)
-  return alg_verify['HS256'](self.header_64 .. "." .. self.claims_64, self.signature, key)
+function M:hs256SignatureIsValid(secret)
+  local hmac = openssl_hmac.new(secret, 'SHA256')
+  local checksum = hmac:final(Token.header .. '.' .. Token.claims)
+  return checksum == Token.signature
 end
 
-function M.needs_to_verify()
+function M.verify_ms_token()
   if is_ms_token() then
     return false
   end
