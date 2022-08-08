@@ -175,7 +175,7 @@ function M:hs256SignatureIsValid(secret)
   return checksum == Token.signature
 end
 
-function M.verify_ms_token()
+function M.needs_to_verify()
   if is_ms_token() then
     return false
   end
