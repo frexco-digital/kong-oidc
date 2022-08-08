@@ -167,16 +167,8 @@ local function is_ms_token()
   return false
 end
 
-function M:verify_signature(key)
+local function verify_signature(key)
   return alg_verify['HS256'](M.header_64 .. "." .. M.claims_64, M.signature, key)
 end
-
-function M.needs_to_verify()
-  if is_ms_token() then
-    return false
-  end
-  return true
-end
-
 
 return M
