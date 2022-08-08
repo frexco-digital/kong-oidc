@@ -124,14 +124,8 @@ function GetRoles(header)
   local token = header:sub(divider+1)
   local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
   local payload = ngx.decode_base64(claims_64)
-  local token_payload = cjson.decode(payload)
-  for i, v in next, token_payload do
-    print(i, v)
-    for n, k in next, v do
-        print(">", n, k)
-    end
-  end
-  local scopes = token_payload[10]
+  local scopes = payload['realm_access']['roles']
+  ngx.log(ngx.DEBUG, tostring(scopes))
   return scopes
 end
 
