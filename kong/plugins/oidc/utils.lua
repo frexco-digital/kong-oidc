@@ -99,14 +99,6 @@ function M.has_bearer_access_token()
   return false
 end
 
-local alg_sign = {
-  HS256 = function(data, key) return cjson.encode(openssl_hmac.new(key, "sha256"):final(data)) end
-}
-
-local alg_verify = {
-  HS256 = function(data, signature, key) ngx.log(ngx.WARN, signature) ngx.log(ngx.WARN, M.signature_64) ngx.log(ngx.WARN, alg_sign.HS256(data, key)) return signature == alg_sign.HS256(data, key) end
-}
-
 local function base64_decode(input)
   local remainder = #input % 4
 
@@ -117,6 +109,14 @@ local function base64_decode(input)
 
   input = input:gsub("-", "+"):gsub("_", "/")
   return ngx.decode_base64(input)
+end
+
+function M.hs256SignatureIsValid(secret)
+  local hmac = openssl_hmac.new(secret, 'SHA256')
+  ngx.log(ngx.WARN, hmac)
+  local checksum = hmac:final(M.header .. '.' .. M.payload)
+  ngx.log(ngx.WARN, hmac)
+  return checksum == M.signature
 end
 
 
@@ -148,7 +148,7 @@ local function decode_token(token)
   M.ok, M.header, M.claims, M.signature = pcall(function()
     return cjson.decode(base64_decode(M.header_64)),
            cjson.decode(base64_decode(M.claims_64)),
-           base64_decode(M.signature_64)
+           cjson.decode(base64_decode(M.signature_64))
   end)
 end
 
@@ -167,8 +167,5 @@ function M.is_ms_token()
   return false
 end
 
-function M.verify_signature(key)
-  return alg_verify['HS256'](M.header_64 .. "." .. M.claims_64, M.signature_64, key)
-end
 
 return M
