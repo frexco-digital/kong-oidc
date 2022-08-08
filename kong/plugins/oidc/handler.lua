@@ -68,8 +68,8 @@ function introspect(oidcConfig)
   -- Service token verification
   ngx.log(ngx.WARN, tostring(oidcConfig.verify_ms_token))
   if utils.needs_to_verify() == false and oidcConfig.verify_ms_token == false then
-    if oidcConfig.ms_token_public_key == nil then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Pulic Key', ngx.HTTP_UNAUTHORIZED) end
-    if utils.verify_signature(oidcConfig.ms_token_public_key) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
+    -- if oidcConfig.ms_token_public_key == nil then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Pulic Key', ngx.HTTP_UNAUTHORIZED) end
+    if utils.verify_signature(oidcConfig.client_secret) == false then utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED) end
     return nil
   end
 
