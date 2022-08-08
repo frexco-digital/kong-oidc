@@ -1,9 +1,8 @@
 local cjson = require("cjson")
 local openssl = {
-  pkey = require 'openssl.pkey',
-  digest = require 'openssl.digest',
-  x509 = require 'openssl.x509',
-  hmac = require 'openssl.hmac'
+  pkey = require 'resty.openssl.pkey',
+  digest = require 'resty.openssl.digest',
+  hmac = require 'resty.openssl.hmac'
 }
 
 local M = {}
