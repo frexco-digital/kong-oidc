@@ -99,6 +99,14 @@ function M.has_bearer_access_token()
   return false
 end
 
+local alg_sign = {
+  HS256 = function(data, key) return openssl_hmac.new(key, "sha256"):final(data) end
+}
+
+local alg_verify = {
+  HS256 = function(data, signature, key) return signature == alg_sign.HS256(data, key) end
+}
+
 local function base64_decode(input)
   local remainder = #input % 4
 
@@ -135,19 +143,19 @@ end
 
 local function decode_token(token)
 
-  local header_64, claims_64, signature_64 = unpack(tokenize(token, ".", 3))
+  M.header_64, M.claims_64, M.signature_64 = unpack(tokenize(token, ".", 3))
 
   local ok, header, claims, signature = pcall(function()
-    return cjson.decode(base64_decode(header_64)),
-           cjson.decode(base64_decode(claims_64)),
-           base64_decode(signature_64)
+    return cjson.decode(base64_decode(M.header_64)),
+           cjson.decode(base64_decode(M.claims_64)),
+           base64_decode(M.signature_64)
   end)
 
   return {
     token = token,
-    header_64 = header_64,
-    claims_64 = claims_64,
-    signature_64 = signature_64,
+    header_64 = M.header_64,
+    claims_64 = M.claims_64,
+    signature_64 = M.signature_64,
     header = header,
     claims = claims,
     signature = signature
@@ -159,8 +167,8 @@ local function is_ms_token()
   local header = ngx.req.get_headers()['Authorization']
   if header and header:find(" ") then
     local token_64 = header:sub(header:find(' ')+1)
-    Token = decode_token(token_64)
-    for k, v in pairs(Token.claims.realm_access.roles) do
+    local payload = decode_token(token_64)
+    for k, v in pairs(payload.claims.realm_access.roles) do
       if string.lower(tostring(v)) == 'microservice' then
         return true
       end
@@ -169,10 +177,8 @@ local function is_ms_token()
   return false
 end
 
-function M:hs256SignatureIsValid(secret)
-  local hmac = openssl_hmac.new(secret, 'SHA256')
-  local checksum = hmac:final(Token.header .. '.' .. Token.claims)
-  return checksum == Token.signature
+function M:verify_signature(key)
+  return alg_verify['HS256'](M.header_64 .. "." .. M.claims_64, M.signature, key)
 end
 
 function M.needs_to_verify()
