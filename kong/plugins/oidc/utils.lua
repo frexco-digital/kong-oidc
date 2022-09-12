@@ -125,6 +125,9 @@ local alg_verify = {
 }
 
 function M.verify_signature(pkey)
+  if M.header_64 == nil or M.claims_64 == nil or M.signature == nil then
+    return false
+  end
   return alg_verify[M.header.alg](M.header_64 .. "." .. M.claims_64, M.signature, pkey)
 end
 
