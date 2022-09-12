@@ -93,8 +93,15 @@ end
 
 function M.has_bearer_access_token()
   local header = ngx.req.get_headers()['Authorization']
+  ngx.log(ngx.ALERT, header)
   if header and header:find(" ") then
     local divider = header:find(' ')
+    ngx.log(ngx.ALERT, header:find(' '))
+    ngx.log(ngx.ALERT, header:sub(divider))
+    ngx.log(ngx.ALERT, header:sub(divider+1))
+    ngx.log(ngx.ALERT, string.lower(header:sub(divider)))
+    ngx.log(ngx.ALERT, string.lower(string.lower("Bearer")))
+    ngx.log(ngx.ALERT, string.lower(header:sub(divider)) == string.lower("Bearer"))
     if string.lower(header:sub(divider)) == string.lower("Bearer") then
       return true
     end
