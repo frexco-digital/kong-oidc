@@ -181,6 +181,9 @@ function M.is_ms_token()
   if header and header:find(" ") then
     local token_64 = header:sub(header:find(' ')+1)
     decode_token(token_64)
+    if M.claims == nil then
+      return false
+    end
     for k, v in pairs(M.claims.realm_access.roles) do
       if string.lower(tostring(v)) == 'microservice' then
         return true
