@@ -115,7 +115,9 @@ local alg_verify = {
   HS256 = function(data, signature, key) return signature == alg_sign.HS256(data, key) end,
   RS256 = function(data, signature, key)
     local pkey, _ = openssl_pkey.new(key)
-    assert(pkey, "Consumer Public Key is Invalid")
+    if pkey == "Consumer Public Key is Invalid" then
+      return false
+    end
     local digest = openssl_digest.new("sha256")
     assert(digest:update(data))
     return pkey:verify(signature, digest)
