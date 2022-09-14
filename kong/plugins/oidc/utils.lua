@@ -184,6 +184,9 @@ function M.is_ms_token()
     if M.claims == nil then
       return false
     end
+    if M.claims.realm_access == nil then
+      return false
+    end
     for k, v in pairs(M.claims.realm_access.roles) do
       if string.lower(tostring(v)) == 'microservice' then
         return true
