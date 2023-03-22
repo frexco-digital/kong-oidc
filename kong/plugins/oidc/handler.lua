@@ -64,18 +64,21 @@ function make_oidc(oidcConfig)
 end
 
 function introspect(oidcConfig)
+  unauthorized_response = utils.get_unauthorized_response('token-invalid')
+  if not utils.has_bearer_access_token() then
+    utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
+  end
+
+  if utils.verify_token_expired() then
+    json_response = utils.get_unauthorized_response('token-expired')
+    utils.exit(ngx.HTTP_UNAUTHORIZED, json_response, ngx.HTTP_UNAUTHORIZED)
+  end
 
   -- Service token verification
-  if utils.is_ms_token() == true then
-    if oidcConfig.verify_ms_token == false then
-      if utils.has_bearer_access_token() == false then
-        utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Bearer Token', ngx.HTTP_UNAUTHORIZED)
-      end
-      if oidcConfig.token_public_key == nil then
-        utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Public Key', ngx.HTTP_UNAUTHORIZED)
-      end
-      if utils.verify_signature(oidcConfig.token_public_key) == false then
-        utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED)
+  if utils.is_ms_token() then
+    if not oidcConfig.verify_ms_token then
+      if not utils.verify_signature(oidcConfig.token_public_key) then
+        utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
       end
       ngx.log(ngx.ALERT, '### SKIPPING REQUEST ###')
       return utils.claims
@@ -83,29 +86,32 @@ function introspect(oidcConfig)
   end
 
   -- Client token verification
-  if utils.is_ms_token() == false then
-    if oidcConfig.verify_client_token == false then
-      if utils.has_bearer_access_token() == false then
-        utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Bearer Token', ngx.HTTP_UNAUTHORIZED)
-      end
-      if oidcConfig.token_public_key == nil then
-        utils.exit(ngx.HTTP_UNAUTHORIZED, 'Missing Public Key', ngx.HTTP_UNAUTHORIZED)
-      end
-      if utils.verify_signature(oidcConfig.token_public_key) == false then
-        utils.exit(ngx.HTTP_UNAUTHORIZED, 'Invalid Signature', ngx.HTTP_UNAUTHORIZED)
+  if not utils.is_ms_token() then
+    keycloak_token_is_valid = utils.verify_signature(oidcConfig.token_public_key)
+    ameixa_token_is_valid = utils.verify_signature(oidcConfig.token_private_key)
+    if not oidcConfig.verify_client_token then
+      if not keycloak_token_is_valid and not ameixa_token_is_valid then
+        utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
       end
       ngx.log(ngx.ALERT, '### SKIPPING REQUEST ###')
       return utils.claims
     end
+    if ameixa_token_is_valid then
+      ngx.log(ngx.ALERT, '### SKIPPING REQUEST ###')
+      return utils.claims
+    end
+    if not keycloak_token_is_valid then
+      utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
+    end
   end
 
-  if utils.has_bearer_access_token() or oidcConfig.bearer_only == "yes" then
+  if oidcConfig.bearer_only == "yes" then
     ngx.log(ngx.ALERT, '### MAKING REQUEST ###')
     local res, err = require("resty.openidc").introspect(oidcConfig)
     if err then
       if oidcConfig.bearer_only == "yes" then
         ngx.header["WWW-Authenticate"] = 'Bearer realm="' .. oidcConfig.realm .. '",error="' .. err .. '"'
-        utils.exit(ngx.HTTP_UNAUTHORIZED, err, ngx.HTTP_UNAUTHORIZED)
+        utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
       end
       return nil
     end
