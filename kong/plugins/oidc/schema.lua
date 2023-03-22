@@ -21,6 +21,7 @@ return {
     filters = { type = "string" },
     verify_client_token = {type = "boolean", default = false},
     verify_ms_token = {type = "boolean", default = false},
-    token_public_key = {type = "string", required = false}
+    token_public_key = {type = "string", required = true},
+    token_private_key = {type = "string", required = true},
   }
 }

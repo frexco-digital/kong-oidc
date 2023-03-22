@@ -63,8 +63,18 @@ function M.get_options(config, ngx)
     redirect_after_logout_uri = config.redirect_after_logout_uri,
     verify_ms_token = config.verify_ms_token,
     verify_client_token = config.verify_client_token,
-    token_public_key = config.token_public_key
+    token_public_key = config.token_public_key,
+    token_private_key = config.token_private_key,
   }
+end
+
+function M.get_unauthorized_response(message)
+  local unauthorized_response = {
+    message = message,
+    statusCode = 401,
+    error = "Unauthorized"
+  }
+  return cjson.encode(unauthorized_response)
 end
 
 function M.exit(httpStatusCode, message, ngxCode)
@@ -123,6 +133,18 @@ local alg_verify = {
     return pkey:verify(signature, digest)
   end
 }
+
+function M.verify_token_expired()
+  local header = ngx.req.get_headers()['Authorization']
+  if header and header:find(" ") then
+    local token_64 = header:sub(header:find(' ')+1)
+    decode_token(token_64)
+    local current_time = os.time()
+    if current_time > M.claims.exp then
+      return true
+    end
+  end
+  return false
 
 function M.verify_signature(pkey)
   if M.header_64 == nil or M.claims_64 == nil or M.signature == nil then
