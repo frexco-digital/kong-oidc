@@ -145,6 +145,7 @@ function M.verify_token_expired()
     end
   end
   return false
+end
 
 function M.verify_signature(pkey)
   if M.header_64 == nil or M.claims_64 == nil or M.signature == nil then
