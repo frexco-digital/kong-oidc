@@ -134,19 +134,6 @@ local alg_verify = {
   end
 }
 
-function M.verify_token_expired()
-  local header = ngx.req.get_headers()['Authorization']
-  if header and header:find(" ") then
-    local token_64 = header:sub(header:find(' ')+1)
-    decode_token(token_64)
-    local current_time = os.time()
-    if current_time > M.claims.exp then
-      return true
-    end
-  end
-  return false
-end
-
 function M.verify_signature(pkey)
   if M.header_64 == nil or M.claims_64 == nil or M.signature == nil then
     return false
@@ -198,6 +185,18 @@ local function decode_token(token)
   end)
 end
 
+function M.verify_token_expired()
+  local header = ngx.req.get_headers()['Authorization']
+  if header and header:find(" ") then
+    local token_64 = header:sub(header:find(' ')+1)
+    decode_token(token_64)
+    local current_time = os.time()
+    if current_time > M.claims.exp then
+      return true
+    end
+  end
+  return false
+end
 
 function M.is_ms_token()
   local header = ngx.req.get_headers()['Authorization']

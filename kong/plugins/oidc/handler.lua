@@ -64,13 +64,13 @@ function make_oidc(oidcConfig)
 end
 
 function introspect(oidcConfig)
-  unauthorized_response = utils.get_unauthorized_response('token-invalid')
+  local unauthorized_response = utils.get_unauthorized_response('token-invalid')
   if not utils.has_bearer_access_token() then
     utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
   end
 
   if utils.verify_token_expired() then
-    json_response = utils.get_unauthorized_response('token-expired')
+    local json_response = utils.get_unauthorized_response('token-expired')
     utils.exit(ngx.HTTP_UNAUTHORIZED, json_response, ngx.HTTP_UNAUTHORIZED)
   end
 
@@ -87,8 +87,8 @@ function introspect(oidcConfig)
 
   -- Client token verification
   if not utils.is_ms_token() then
-    keycloak_token_is_valid = utils.verify_signature(oidcConfig.token_public_key)
-    ameixa_token_is_valid = utils.verify_signature(oidcConfig.token_private_key)
+    local keycloak_token_is_valid = utils.verify_signature(oidcConfig.token_public_key)
+    local ameixa_token_is_valid = utils.verify_signature(oidcConfig.token_private_key)
     if not oidcConfig.verify_client_token then
       if not keycloak_token_is_valid and not ameixa_token_is_valid then
         utils.exit(ngx.HTTP_UNAUTHORIZED, unauthorized_response, ngx.HTTP_UNAUTHORIZED)
